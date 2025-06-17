@@ -1,0 +1,60 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+
+## Project Overview
+
+This is a Rust project called `livemarkdown-rs` - appears to be a markdown-related tool based on the name. Currently in early development stage with minimal implementation.
+
+## Development Commands
+
+### Building and Running
+- `cargo build` - Compile the project
+- `cargo run` - Build and run the application
+- `cargo check` - Check code without building (faster feedback)
+
+### Testing and Quality
+- `cargo test` - Run all tests
+- `cargo clippy` - Run Rust linter for code quality
+- `cargo fmt` - Format code according to Rust standards
+
+### Dependencies
+- `cargo add <crate_name>` - Add a new dependency
+- `cargo update` - Update dependencies to latest compatible versions
+
+## Architecture
+
+Currently a single-file Rust application with:
+- `src/main.rs` - Entry point with basic Hello World implementation
+- `Cargo.toml` - Project configuration and dependencies
+
+## Notes
+
+- Project uses Rust 2024 edition
+- No external dependencies currently defined
+- No test structure in place yet
+
+# Product requirements
+A rust application that watches changes in a markdown file and renders into an html by serving it over local http server.
+
+# Requirements
+
+- The application should be an executable binary.
+- The application should accept a `--port` option to run the server.
+    - If the port is used, it should return the exit code 30.
+- The application should
+- The http server should expose the following HTTP calls:
+    - `POST /api/document` which creates a markdown that is watched with `{ filepath: string; }`. And returns a document id with `{ id: string }`
+    - `DELETE /api/document/:id` removes a file that is watched.
+    - `POST /api/document/:id/open` opens the file in the browser.
+    - `POST /api/document/:id/position` sends a desired document position that `{ sourcepos: string; }`
+- The http server should serve the documents that are rendered with `GET /document/:id`
+- The http server should also have a SSE API (`GET /document/:id/updates`) which updates the browser clients for the latest active document position and and update event when the file contents are changed
+
+# Rust libraries
+
+- `comrak`: Render markdown with github flavor and sourcepos
+- `notify` and `notify-debouncer-mini`: File watcher
+- `axum`: HTTP server
+- `facet`: JSON serialization
