@@ -1,5 +1,12 @@
+use axum::{
+    extract::Path,
+    http::StatusCode,
+    routing::{delete, get, post},
+    Router,
+};
 use clap::Parser;
 use std::process;
+use tokio::net::TcpListener;
 
 #[derive(Parser)]
 #[command(name = "livemarkdown")]
@@ -24,10 +31,54 @@ fn validate_port(s: &str) -> Result<u16, String> {
     }
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let args = Args::parse();
 
-    println!("Starting livemarkdown server on port {}", args.port);
+    let app = Router::new()
+        .route("/api/document", post(create_document))
+        .route("/api/document/{id}", delete(delete_document))
+        .route("/api/document/{id}/open", post(open_document))
+        .route("/api/document/{id}/position", post(update_position))
+        .route("/document/{id}", get(serve_document));
 
-    process::exit(0);
+    let addr = format!("127.0.0.1:{}", args.port);
+    
+    match TcpListener::bind(&addr).await {
+        Ok(listener) => {
+            println!("Starting livemarkdown server on port {}", args.port);
+            if let Err(e) = axum::serve(listener, app).await {
+                eprintln!("Server error: {}", e);
+                process::exit(1);
+            }
+        }
+        Err(_) => {
+            eprintln!("Port {} is already in use", args.port);
+            process::exit(30);
+        }
+    }
+}
+
+async fn create_document() -> String {
+    r#"{"id": "dummy-doc-123"}"#.to_string()
+}
+
+async fn delete_document(Path(id): Path<String>) -> StatusCode {
+    println!("Deleting document: {}", id);
+    StatusCode::OK
+}
+
+async fn open_document(Path(id): Path<String>) -> String {
+    println!("Opening document: {}", id);
+    "Document opened".to_string()
+}
+
+async fn update_position(Path(id): Path<String>) -> String {
+    println!("Updating position for document: {}", id);
+    "Position updated".to_string()
+}
+
+async fn serve_document(Path(id): Path<String>) -> String {
+    println!("Serving document: {}", id);
+    format!("<html><body><h1>Document {}</h1><p>This is a dummy rendered document.</p></body></html>", id)
 }
