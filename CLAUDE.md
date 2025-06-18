@@ -58,3 +58,16 @@ A rust application that watches changes in a markdown file and renders into an h
 - `notify` and `notify-debouncer-mini`: File watcher
 - `axum`: HTTP server
 - `facet`: JSON serialization
+
+# Remaining tasks
+
+[x] Implement CLI args parsing
+[x] Implement basic HTTP server with `axum`
+[x] Integrate `facet` for JSON serialization
+[x] Add integration tests using `axum_test`
+[x] Modularize server code into `src/lib.rs`
+[ ] Integrate `comrak` to render markdown to HTML with source position
+[ ] Implement file watching using `notify` and `notify-debouncer-mini`
+[ ] Implement SSE for real-time updates
+[ ] Add tests for SSE
+[ ] Add error handling and logging
