@@ -14,3 +14,6 @@ notify = "8.0.0"
 notify-debouncer-mini = "0.6.0"
 tokio = { version = "1.45.1", features = ["full"] }
 
+[dev-dependencies]
+axum-test = "18.0.0-rc3"
+

@@ -15,7 +15,7 @@ This is a Rust project called `livemarkdown-rs` - appears to be a markdown-relat
 - `cargo check` - Check code without building (faster feedback)
 
 ### Testing and Quality
-- `cargo test` - Run all tests
+- `cargo test` - Run all tests (using axum_test for integration tests)
 - `cargo clippy` - Run Rust linter for code quality
 - `cargo fmt` - Format code according to Rust standards
 
