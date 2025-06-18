@@ -77,6 +77,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ariadne"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "36f5e3dca4e09a6f340a61a0e9c7b61e030c69fc27bf29d73218f7e5e3b7638f"
+dependencies = [
+ "unicode-width",
+ "yansi",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -429,6 +439,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "facet-deserialize"
+version = "0.24.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16a3b9482b57a62b28e7be748c367436f91b45bd9543f9fdfbc75429f124099e"
+dependencies = [
+ "ariadne",
+ "facet-core",
+ "facet-reflect",
+ "log",
+ "owo-colors",
+]
+
+[[package]]
+name = "facet-json"
+version = "0.24.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "834139ca8ebc772399fb5ed9570cb2683661c91a941190fdac2490d4336c5958"
+dependencies = [
+ "facet-core",
+ "facet-deserialize",
+ "facet-reflect",
+ "facet-serialize",
+ "itoa",
+ "log",
+ "ryu",
+]
+
+[[package]]
 name = "facet-macros"
 version = "0.27.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -457,6 +495,38 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unsynn",
+]
+
+[[package]]
+name = "facet-pretty"
+version = "0.23.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d570645cac5df5c42026a557104887f827dd35c1496fc2c019c1e2b8e0830aa"
+dependencies = [
+ "facet-core",
+ "facet-reflect",
+]
+
+[[package]]
+name = "facet-reflect"
+version = "0.27.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e334332090a072b4b85319ac8097db4274581b5562bd38945715be383f26c732"
+dependencies = [
+ "bitflags 2.9.1",
+ "facet-core",
+ "owo-colors",
+]
+
+[[package]]
+name = "facet-serialize"
+version = "0.24.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a20c6d907229596d8fc147e03fdcc6524391b71278be6827b8df30f699f33797"
+dependencies = [
+ "facet-core",
+ "facet-reflect",
+ "log",
 ]
 
 [[package]]
@@ -785,6 +855,8 @@ dependencies = [
  "clap",
  "comrak",
  "facet",
+ "facet-json",
+ "facet-pretty",
  "notify",
  "notify-debouncer-mini",
  "tokio",
@@ -936,6 +1008,12 @@ dependencies = [
  "cc",
  "pkg-config",
 ]
+
+[[package]]
+name = "owo-colors"
+version = "4.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26995317201fa17f3656c36716aed4a7c81743a9634ac4c99c0eeda495db0cec"
 
 [[package]]
 name = "parking_lot"
@@ -1477,6 +1555,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "unicode-width"
+version = "0.1.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7dd6e30e90baa6f72411720665d41d89b9a3d039dc45b8faea1ddd07f617f6af"
+
+[[package]]
 name = "unicode_categories"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1697,3 +1781,9 @@ checksum = "56c1936c4cc7a1c9ab21a1ebb602eb942ba868cbd44a99cb7cdc5892335e1c85"
 dependencies = [
  "linked-hash-map",
 ]
+
+[[package]]
+name = "yansi"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cfe53a6657fd280eaa890a3bc59152892ffa3e30101319d168b781ed6529b049"

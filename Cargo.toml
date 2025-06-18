@@ -8,6 +8,9 @@ axum = "0.8.4"
 clap = { version = "4.5.40", features = ["derive"] }
 comrak = "0.39.0"
 facet = "0.27.14"
+facet-json = "0.24.13"
+facet-pretty = "0.23.19"
 notify = "8.0.0"
 notify-debouncer-mini = "0.6.0"
 tokio = { version = "1.45.1", features = ["full"] }
+
