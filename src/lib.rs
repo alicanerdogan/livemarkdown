@@ -2,35 +2,111 @@ use axum::{
     Router,
     extract::Path,
     http::{HeaderMap, StatusCode, header},
-    response::IntoResponse,
+    response::{IntoResponse, sse::{Event, Sse}},
     routing::{delete, get, post},
 };
 use facet::Facet;
+use notify::{RecommendedWatcher, RecursiveMode};
+use notify_debouncer_mini::{new_debouncer, DebounceEventResult, Debouncer};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
+use tokio::sync::broadcast;
+use tokio_stream::Stream;
+use std::convert::Infallible;
 use ulid::Ulid;
 
 pub mod markdown;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
+pub enum DocumentEvent {
+    FileChanged { document_id: String },
+    PositionUpdate { document_id: String, sourcepos: String },
+}
+
 pub struct DocumentStore {
     filepath_map: HashMap<String, String>,    // id -> filepath
     document_id_map: HashMap<String, String>, // filepath -> id
+    position_map: HashMap<String, String>,    // id -> sourcepos
+    event_tx: Option<broadcast::Sender<DocumentEvent>>,
 }
 
 #[derive(Clone)]
 pub struct AppState {
     store: Arc<Mutex<DocumentStore>>,
+    event_tx: broadcast::Sender<DocumentEvent>,
+    file_watcher: Arc<Mutex<Option<Debouncer<RecommendedWatcher>>>>,
 }
 
 impl AppState {
     pub fn new() -> Self {
+        let (event_tx, _) = broadcast::channel(100);
+        let event_tx_clone = event_tx.clone();
+        
         Self {
             store: Arc::new(Mutex::new(DocumentStore {
                 filepath_map: HashMap::new(),
                 document_id_map: HashMap::new(),
+                position_map: HashMap::new(),
+                event_tx: Some(event_tx_clone),
             })),
+            event_tx,
+            file_watcher: Arc::new(Mutex::new(None)),
         }
+    }
+    
+    fn init_file_watcher(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let mut watcher_guard = self.file_watcher.lock().unwrap();
+        
+        if watcher_guard.is_some() {
+            return Ok(()); // Already initialized
+        }
+        
+        let event_tx = self.event_tx.clone();
+        let store = self.store.clone();
+        
+        let debouncer = new_debouncer(Duration::from_millis(300), move |res: DebounceEventResult| {
+            if let Ok(events) = res {
+                for event in events {
+                    if let Some(path) = event.path.to_str() {
+                        if let Ok(store_guard) = store.lock() {
+                            if let Some(doc_id) = store_guard.document_id_map.get(path) {
+                                let _ = event_tx.send(DocumentEvent::FileChanged {
+                                    document_id: doc_id.clone(),
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        })?;
+        
+        *watcher_guard = Some(debouncer);
+        Ok(())
+    }
+    
+    pub fn watch_file(&self, filepath: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        // Initialize watcher if needed
+        self.init_file_watcher()?;
+        
+        let mut watcher_guard = self.file_watcher.lock().unwrap();
+        if let Some(ref mut debouncer) = *watcher_guard {
+            debouncer.watcher().watch(
+                std::path::Path::new(filepath),
+                RecursiveMode::NonRecursive,
+            )?;
+        }
+        
+        Ok(())
+    }
+    
+    pub fn unwatch_file(&self, filepath: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let mut watcher_guard = self.file_watcher.lock().unwrap();
+        if let Some(ref mut debouncer) = *watcher_guard {
+            debouncer.watcher().unwatch(std::path::Path::new(filepath))?;
+        }
+        
+        Ok(())
     }
 
     pub fn get_id_by_filepath(&self, filepath: &str) -> Option<String> {
@@ -52,20 +128,61 @@ impl AppState {
     }
 
     pub fn add_document(&self, id: String, filepath: String) {
-        let mut store = self.store.lock().unwrap();
-        store.filepath_map.insert(id.clone(), filepath.clone());
-        store.document_id_map.insert(filepath, id);
+        {
+            let mut store = self.store.lock().unwrap();
+            store.filepath_map.insert(id.clone(), filepath.clone());
+            store.document_id_map.insert(filepath.clone(), id.clone());
+            store.position_map.insert(id.clone(), "1:1-1:1".to_string()); // Default position
+        }
+        
+        // Start watching the file
+        if let Err(e) = self.watch_file(&filepath) {
+            eprintln!("Failed to watch file {}: {}", filepath, e);
+        }
     }
 
     pub fn remove_document(&self, id: &str) -> Option<String> {
-        let mut store = self.store.lock().unwrap();
-
-        if let Some(filepath) = store.filepath_map.remove(id) {
-            store.document_id_map.remove(&filepath);
-            Some(filepath)
-        } else {
-            None
+        let filepath = {
+            let mut store = self.store.lock().unwrap();
+            if let Some(filepath) = store.filepath_map.remove(id) {
+                store.document_id_map.remove(&filepath);
+                store.position_map.remove(id);
+                Some(filepath)
+            } else {
+                None
+            }
+        };
+        
+        // Stop watching the file if it was removed
+        if let Some(ref path) = filepath {
+            if let Err(e) = self.unwatch_file(path) {
+                eprintln!("Failed to unwatch file {}: {}", path, e);
+            }
         }
+        
+        filepath
+    }
+    
+    pub fn update_position(&self, id: &str, sourcepos: String) {
+        let mut store = self.store.lock().unwrap();
+        store.position_map.insert(id.to_string(), sourcepos.clone());
+        
+        // Broadcast position update
+        if let Some(ref tx) = store.event_tx {
+            let _ = tx.send(DocumentEvent::PositionUpdate {
+                document_id: id.to_string(),
+                sourcepos,
+            });
+        }
+    }
+    
+    pub fn get_position(&self, id: &str) -> Option<String> {
+        self.store
+            .lock()
+            .unwrap()
+            .position_map
+            .get(id)
+            .cloned()
     }
 
     pub fn get_all_documents(&self) -> Vec<(String, String)> {
@@ -113,6 +230,7 @@ pub fn create_app_with_state(state: AppState) -> Router {
         .route("/api/document/{id}/open", post(open_document))
         .route("/api/document/{id}/position", post(update_position))
         .route("/document/{id}", get(serve_document))
+        .route("/document/{id}/updates", get(document_updates))
         .with_state(state)
 }
 
@@ -204,13 +322,20 @@ async fn open_document(Path(id): Path<String>) -> impl IntoResponse {
     (StatusCode::CREATED, headers, "Document opened")
 }
 
-async fn update_position(Path(id): Path<String>, body: String) -> StatusCode {
+async fn update_position(
+    Path(id): Path<String>, 
+    axum::extract::State(state): axum::extract::State<AppState>,
+    body: String
+) -> StatusCode {
     // Parse the request body using facet
     let request: UpdatePositionRequest =
         facet_json::from_str(&body).unwrap_or_else(|_| UpdatePositionRequest {
             sourcepos: "unknown".to_string(),
         });
 
+    // Update position in store and broadcast event
+    state.update_position(&id, request.sourcepos.clone());
+    
     println!(
         "Updating position for document {}: {}",
         id, request.sourcepos
@@ -254,6 +379,56 @@ async fn serve_document(
     headers.insert(header::CONTENT_TYPE, "text/html".parse().unwrap());
 
     (StatusCode::OK, headers, html_content).into_response()
+}
+
+async fn document_updates(
+    Path(id): Path<String>,
+    axum::extract::State(state): axum::extract::State<AppState>,
+) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, StatusCode> {
+    // Check if document exists
+    if state.get_filepath_by_id(&id).is_none() {
+        return Err(StatusCode::NOT_FOUND);
+    }
+    
+    // Get current position and send it immediately
+    let current_position = state.get_position(&id).unwrap_or_else(|| "1:1-1:1".to_string());
+    
+    // Subscribe to broadcast channel
+    let rx = state.event_tx.subscribe();
+    
+    // Create stream that starts with current position and then listens for updates
+    let stream = async_stream::stream! {
+        // Send current position immediately
+        yield Ok(Event::default()
+            .event("position")
+            .data(format!("{{\"sourcepos\":\"{}\"}}", current_position)));
+        
+        let mut rx = rx;
+        // Listen for updates
+        while let Ok(event) = rx.recv().await {
+            match event {
+                DocumentEvent::FileChanged { document_id } if document_id == id => {
+                    yield Ok(Event::default()
+                        .event("file_changed")
+                        .data("{}"));
+                },
+                DocumentEvent::PositionUpdate { document_id, sourcepos } if document_id == id => {
+                    yield Ok(Event::default()
+                        .event("position")
+                        .data(format!("{{\"sourcepos\":\"{}\"}}", sourcepos)));
+                },
+                _ => {
+                    // Ignore events for other documents
+                }
+            }
+        }
+    };
+    
+    Ok(Sse::new(stream).keep_alive(
+        axum::response::sse::KeepAlive::new()
+            .interval(Duration::from_secs(30))
+            .text("ping")
+    ))
 }
 
 fn try_render_markdown(content: &str) -> Result<String, ()> {
