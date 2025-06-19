@@ -7,6 +7,8 @@ use axum::{
 };
 use facet::Facet;
 
+pub mod markdown;
+
 // API request/response structures
 #[derive(Facet)]
 pub struct CreateDocumentRequest {

@@ -71,3 +71,4 @@ A rust application that watches changes in a markdown file and renders into an h
 [ ] Implement SSE for real-time updates
 [ ] Add tests for SSE
 [ ] Add error handling and logging
+[ ] Use file streams for reading files
