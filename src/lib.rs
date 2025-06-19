@@ -1,9 +1,9 @@
 use axum::{
+    Router,
     extract::Path,
-    http::{header, HeaderMap, StatusCode},
+    http::{HeaderMap, StatusCode, header},
     response::IntoResponse,
     routing::{delete, get, post},
-    Router,
 };
 use facet::Facet;
 use std::collections::HashMap;
@@ -12,48 +12,56 @@ use ulid::Ulid;
 
 pub mod markdown;
 
-// Global state for document management
-type DocumentStore = Arc<Mutex<HashMap<String, String>>>; // id -> filepath
-type FilepathToIdMap = Arc<Mutex<HashMap<String, String>>>; // filepath -> id
+#[derive(Clone)]
+pub struct DocumentStore {
+    filepath_map: HashMap<String, String>,    // id -> filepath
+    document_id_map: HashMap<String, String>, // filepath -> id
+}
 
 #[derive(Clone)]
 pub struct AppState {
-    documents: DocumentStore,
-    filepath_to_id: FilepathToIdMap,
+    store: Arc<Mutex<DocumentStore>>,
 }
 
 impl AppState {
     pub fn new() -> Self {
         Self {
-            documents: Arc::new(Mutex::new(HashMap::new())),
-            filepath_to_id: Arc::new(Mutex::new(HashMap::new())),
+            store: Arc::new(Mutex::new(DocumentStore {
+                filepath_map: HashMap::new(),
+                document_id_map: HashMap::new(),
+            })),
         }
     }
 
     pub fn get_id_by_filepath(&self, filepath: &str) -> Option<String> {
-        let filepath_to_id = self.filepath_to_id.lock().unwrap();
-        filepath_to_id.get(filepath).cloned()
+        self.store
+            .lock()
+            .unwrap()
+            .document_id_map
+            .get(filepath)
+            .cloned()
     }
 
     pub fn get_filepath_by_id(&self, id: &str) -> Option<String> {
-        let documents = self.documents.lock().unwrap();
-        documents.get(id).cloned()
+        self.store
+            .lock()
+            .unwrap()
+            .filepath_map
+            .get(id)
+            .cloned()
     }
 
     pub fn add_document(&self, id: String, filepath: String) {
-        let mut documents = self.documents.lock().unwrap();
-        let mut filepath_to_id = self.filepath_to_id.lock().unwrap();
-
-        documents.insert(id.clone(), filepath.clone());
-        filepath_to_id.insert(filepath, id);
+        let mut store = self.store.lock().unwrap();
+        store.filepath_map.insert(id.clone(), filepath.clone());
+        store.document_id_map.insert(filepath, id);
     }
 
     pub fn remove_document(&self, id: &str) -> Option<String> {
-        let mut documents = self.documents.lock().unwrap();
-        let mut filepath_to_id = self.filepath_to_id.lock().unwrap();
+        let mut store = self.store.lock().unwrap();
 
-        if let Some(filepath) = documents.remove(id) {
-            filepath_to_id.remove(&filepath);
+        if let Some(filepath) = store.filepath_map.remove(id) {
+            store.document_id_map.remove(&filepath);
             Some(filepath)
         } else {
             None
@@ -141,9 +149,14 @@ async fn create_document(
     (StatusCode::CREATED, headers, json_body)
 }
 
-async fn delete_document(Path(id): Path<String>) -> StatusCode {
-    println!("Deleting document: {}", id);
-    StatusCode::OK
+async fn delete_document(
+    Path(id): Path<String>,
+    axum::extract::State(state): axum::extract::State<AppState>,
+) -> StatusCode {
+    match state.remove_document(&id) {
+        Some(_) => StatusCode::OK,
+        None => StatusCode::NOT_FOUND,
+    }
 }
 
 async fn open_document(Path(id): Path<String>) -> impl IntoResponse {

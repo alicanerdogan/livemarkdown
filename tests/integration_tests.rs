@@ -41,9 +41,31 @@ async fn test_delete_document() {
     let app = create_app();
     let server = TestServer::new(app).unwrap();
 
-    let response = server.delete("/api/document/test-doc-id").await;
+    // Create a document first
+    let request_body = r#"{"filepath": "/path/to/delete-test.md"}"#;
+    let create_response = server.post("/api/document").text(request_body).await;
+    
+    create_response.assert_status(StatusCode::CREATED);
+    let create_response_body: CreateDocumentResponse =
+        facet_json::from_str(&create_response.text()).unwrap();
+    let doc_id = create_response_body.id;
 
-    response.assert_status(StatusCode::OK);
+    // Delete the document
+    let delete_response = server.delete(&format!("/api/document/{}", doc_id)).await;
+    delete_response.assert_status(StatusCode::OK);
+
+    // Verify document is no longer accessible
+    let serve_response = server.get(&format!("/document/{}", doc_id)).await;
+    serve_response.assert_status(StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn test_delete_nonexistent_document() {
+    let app = create_app();
+    let server = TestServer::new(app).unwrap();
+
+    let response = server.delete("/api/document/nonexistent-id").await;
+    response.assert_status(StatusCode::NOT_FOUND);
 }
 
 #[tokio::test]
