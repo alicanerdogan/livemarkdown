@@ -44,7 +44,7 @@ async fn test_delete_document() {
     // Create a document first
     let request_body = r#"{"filepath": "/path/to/delete-test.md"}"#;
     let create_response = server.post("/api/document").text(request_body).await;
-    
+
     create_response.assert_status(StatusCode::CREATED);
     let create_response_body: CreateDocumentResponse =
         facet_json::from_str(&create_response.text()).unwrap();
@@ -295,20 +295,20 @@ async fn test_list_documents() {
     let request1 = r#"{"filepath": "/path/to/first.md"}"#;
     let create_response1 = server.post("/api/document").text(request1).await;
     create_response1.assert_status(StatusCode::CREATED);
-    let create_body1: CreateDocumentResponse = 
+    let create_body1: CreateDocumentResponse =
         facet_json::from_str(&create_response1.text()).unwrap();
 
     let request2 = r#"{"filepath": "/path/to/second.md"}"#;
     let create_response2 = server.post("/api/document").text(request2).await;
     create_response2.assert_status(StatusCode::CREATED);
-    let create_body2: CreateDocumentResponse = 
+    let create_body2: CreateDocumentResponse =
         facet_json::from_str(&create_response2.text()).unwrap();
 
     // Now check the list contains the documents
     let list_response = server.get("/").await;
     list_response.assert_status_ok();
     let list_body = list_response.text();
-    
+
     assert!(list_body.contains(&format!("/document/{}", create_body1.id)));
     assert!(list_body.contains("/path/to/first.md"));
     assert!(list_body.contains(&format!("/document/{}", create_body2.id)));
@@ -319,30 +319,27 @@ async fn test_list_documents() {
 async fn test_sse_endpoint_exists() {
     let app = create_app();
     let server = TestServer::new(app).unwrap();
-    
+
     // First create a document
     let request_body = r#"{"filepath": "/path/to/test.md"}"#;
     let create_response = server.post("/api/document").text(request_body).await;
     create_response.assert_status(StatusCode::CREATED);
-    
-    let create_body: CreateDocumentResponse = 
+
+    let create_body: CreateDocumentResponse =
         facet_json::from_str(&create_response.text()).unwrap();
     let doc_id = create_body.id;
-    
+
     // Test SSE endpoint with timeout - just check that it connects and starts streaming
     let request = server.get(&format!("/document/{}/updates", doc_id));
-    
+
     // Use timeout to prevent hanging
-    let response = tokio::time::timeout(
-        std::time::Duration::from_secs(2),
-        request
-    ).await;
-    
+    let response = tokio::time::timeout(std::time::Duration::from_secs(2), request).await;
+
     // Check that we got a response (even if timed out, it means connection was established)
     match response {
         Ok(resp) => {
             resp.assert_status_ok();
-        },
+        }
         Err(_) => {
             // Timeout is expected for SSE connections, this is actually success
             // as it means the connection was established and streaming started
@@ -354,7 +351,7 @@ async fn test_sse_endpoint_exists() {
 async fn test_sse_endpoint_nonexistent_document() {
     let app = create_app();
     let server = TestServer::new(app).unwrap();
-    
+
     // Test SSE endpoint for non-existent document
     let response = server.get("/document/nonexistent-id/updates").await;
     response.assert_status(StatusCode::NOT_FOUND);
@@ -362,101 +359,99 @@ async fn test_sse_endpoint_nonexistent_document() {
 
 #[tokio::test]
 async fn test_file_watcher_integration() {
-    use std::fs;
     use std::env;
-    
+    use std::fs;
+
     // Create a temporary file using TMPDIR
     let tmp_dir = env::var("TMPDIR").unwrap_or_else(|_| "/tmp".to_string());
     let file_path = format!("{}/test_file_watcher_{}.md", tmp_dir, ulid::Ulid::new());
     fs::write(&file_path, "# Initial content").unwrap();
-    
+
     let app = create_app();
     let server = TestServer::new(app).unwrap();
-    
+
     // Create a document that watches the file
     let request_body = format!(r#"{{"filepath":"{}"}}"#, file_path);
     let create_response = server.post("/api/document").text(&request_body).await;
     create_response.assert_status(StatusCode::CREATED);
-    
-    let create_body: CreateDocumentResponse = 
+
+    let create_body: CreateDocumentResponse =
         facet_json::from_str(&create_response.text()).unwrap();
     let doc_id = create_body.id;
-    
+
     // Verify the document can be served
     let serve_response = server.get(&format!("/document/{}", doc_id)).await;
     serve_response.assert_status_ok();
     let content = serve_response.text();
     assert!(content.contains("Initial content"));
-    
+
     // Test that file watcher is set up (SSE endpoint should work)
     let sse_request = server.get(&format!("/document/{}/updates", doc_id));
-    let sse_response = tokio::time::timeout(
-        std::time::Duration::from_secs(1),
-        sse_request
-    ).await;
-    
+    let sse_response = tokio::time::timeout(std::time::Duration::from_secs(1), sse_request).await;
+
     // SSE should connect successfully (timeout is expected)
     match sse_response {
         Ok(resp) => resp.assert_status_ok(),
-        Err(_) => {}, // Timeout is expected for SSE
+        Err(_) => {} // Timeout is expected for SSE
     }
-    
+
     // Clean up
     let _ = fs::remove_file(&file_path);
 }
 
 #[tokio::test]
 async fn test_file_change_notification_via_sse() {
-    use std::fs;
     use std::env;
+    use std::fs;
     use tokio::time::{sleep, Duration};
-    
+
     // Create a temporary file using TMPDIR
     let tmp_dir = env::var("TMPDIR").unwrap_or_else(|_| "/tmp".to_string());
     let file_path = format!("{}/test_file_change_{}.md", tmp_dir, ulid::Ulid::new());
     fs::write(&file_path, "# Initial content").unwrap();
-    
+
     let app = create_app();
     let server = TestServer::new(app).unwrap();
-    
+
     // Create a document that watches the file
     let request_body = format!(r#"{{"filepath":"{}"}}"#, file_path);
     let create_response = server.post("/api/document").text(&request_body).await;
     create_response.assert_status(StatusCode::CREATED);
-    
-    let create_body: CreateDocumentResponse = 
+
+    let create_body: CreateDocumentResponse =
         facet_json::from_str(&create_response.text()).unwrap();
     let doc_id = create_body.id;
-    
+
     // Give the file watcher a moment to initialize
     sleep(Duration::from_millis(100)).await;
-    
+
     // Modify the file to trigger file watcher
-    fs::write(&file_path, "# Modified content\n\nThis file has been changed!").unwrap();
-    
+    fs::write(
+        &file_path,
+        "# Modified content\n\nThis file has been changed!",
+    )
+    .unwrap();
+
     // Give file watcher time to detect and process the change
     sleep(Duration::from_millis(500)).await;
-    
+
     // Verify the updated content can be served
     let serve_response = server.get(&format!("/document/{}", doc_id)).await;
     serve_response.assert_status_ok();
     let content = serve_response.text();
     assert!(content.contains("Modified content"));
     assert!(content.contains("This file has been changed!"));
-    
+
     // Test that SSE endpoint still works after file change
     let sse_request = server.get(&format!("/document/{}/updates", doc_id));
-    let sse_response = tokio::time::timeout(
-        std::time::Duration::from_secs(1),
-        sse_request
-    ).await;
-    
+    let sse_response = tokio::time::timeout(std::time::Duration::from_secs(1), sse_request).await;
+
     // SSE should still connect successfully
     match sse_response {
         Ok(resp) => resp.assert_status_ok(),
-        Err(_) => {}, // Timeout is expected for SSE
+        Err(_) => {} // Timeout is expected for SSE
     }
-    
+
     // Clean up
     let _ = fs::remove_file(&file_path);
 }

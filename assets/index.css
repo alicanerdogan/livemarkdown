@@ -1,0 +1,375 @@
+/* CSS Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+}
+
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+  display: block;
+}
+
+body {
+  line-height: 1;
+}
+
+ol, ul {
+  list-style: none;
+}
+
+blockquote, q {
+  quotes: none;
+}
+
+blockquote:before, blockquote:after,
+q:before, q:after {
+  content: '';
+  content: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/* GitHub-like Markdown Styles */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-size: 16px;
+  line-height: 1.5;
+  color: #1f2328;
+  background-color: #ffffff;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 45px;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+h1 {
+  font-size: 2em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid #d1d9e0;
+}
+
+h2 {
+  font-size: 1.5em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid #d1d9e0;
+}
+
+h3 {
+  font-size: 1.25em;
+}
+
+h4 {
+  font-size: 1em;
+}
+
+h5 {
+  font-size: 0.875em;
+}
+
+h6 {
+  font-size: 0.85em;
+  color: #656d76;
+}
+
+/* Paragraphs and text */
+p {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+blockquote {
+  margin: 0 0 16px 0;
+  padding: 0 1em;
+  color: #656d76;
+  border-left: 0.25em solid #d1d9e0;
+}
+
+blockquote > :first-child {
+  margin-top: 0;
+}
+
+blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+/* Lists */
+ul, ol {
+  margin-top: 0;
+  margin-bottom: 16px;
+  padding-left: 2em;
+}
+
+ul {
+  list-style-type: disc;
+}
+
+ol {
+  list-style-type: decimal;
+}
+
+li {
+  margin-bottom: 0.25em;
+}
+
+li > p {
+  margin-top: 16px;
+}
+
+li + li {
+  margin-top: 0.25em;
+}
+
+/* Code */
+code, kbd, pre, samp {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  font-size: 12px;
+}
+
+code {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  white-space: break-spaces;
+  background-color: #afb8c133;
+  border-radius: 6px;
+}
+
+pre {
+  margin-top: 0;
+  margin-bottom: 16px;
+  word-wrap: normal;
+}
+
+pre > code {
+  padding: 0;
+  margin: 0;
+  word-break: normal;
+  white-space: pre;
+  background: transparent;
+  border: 0;
+  font-size: 100%;
+}
+
+pre {
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  color: #1f2328;
+  background-color: #f6f8fa;
+  border-radius: 6px;
+}
+
+/* Links */
+a {
+  color: #0969da;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a:visited {
+  color: #8250df;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  height: auto;
+  background-color: #ffffff;
+  border-style: none;
+}
+
+/* Tables */
+table {
+  border-spacing: 0;
+  border-collapse: collapse;
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow: auto;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+table th {
+  font-weight: 600;
+}
+
+table th,
+table td {
+  padding: 6px 13px;
+  border: 1px solid #d1d9e0;
+}
+
+table tr {
+  background-color: #ffffff;
+  border-top: 1px solid #d1d9e0;
+}
+
+table tr:nth-child(2n) {
+  background-color: #f6f8fa;
+}
+
+table thead tr {
+  background-color: #ffffff;
+}
+
+/* Horizontal rule */
+hr {
+  height: 0.25em;
+  padding: 0;
+  margin: 24px 0;
+  background-color: #d1d9e0;
+  border: 0;
+}
+
+/* Task lists */
+.task-list-item {
+  list-style-type: none;
+  margin-left: -2em;
+}
+
+.task-list-item-checkbox {
+  margin: 0 0.2em 0.25em -1.4em;
+  vertical-align: middle;
+}
+
+/* Strong/Bold */
+strong, b {
+  font-weight: 600;
+}
+
+/* Emphasis/Italic */
+em, i {
+  font-style: italic;
+}
+
+/* Strikethrough */
+del {
+  text-decoration: line-through;
+}
+
+/* Definition lists */
+dl {
+  padding: 0;
+}
+
+dl dt {
+  padding: 0;
+  margin-top: 16px;
+  font-size: 1em;
+  font-style: italic;
+  font-weight: 600;
+}
+
+dl dd {
+  padding: 0 16px;
+  margin-bottom: 16px;
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  body {
+    color: #e6edf3;
+    background-color: #0d1117;
+  }
+
+  /* Headings */
+  h1, h2 {
+    border-bottom-color: #30363d;
+  }
+
+  h6 {
+    color: #8b949e;
+  }
+
+  /* Blockquotes */
+  blockquote {
+    color: #8b949e;
+    border-left-color: #30363d;
+  }
+
+  /* Code */
+  code {
+    color: #e6edf3;
+    background-color: #6e768166;
+  }
+
+  pre {
+    color: #e6edf3;
+    background-color: #161b22;
+  }
+
+  /* Links */
+  a {
+    color: #58a6ff;
+  }
+
+  a:visited {
+    color: #bc8cff;
+  }
+
+  /* Images */
+  img {
+    background-color: #0d1117;
+  }
+
+  /* Tables */
+  table th,
+  table td {
+    border-color: #30363d;
+  }
+
+  table tr {
+    background-color: #0d1117;
+    border-top-color: #30363d;
+  }
+
+  table tr:nth-child(2n) {
+    background-color: #161b22;
+  }
+
+  table thead tr {
+    background-color: #0d1117;
+  }
+
+  /* Horizontal rule */
+  hr {
+    background-color: #30363d;
+  }
+}

@@ -11,7 +11,7 @@ struct Args {
     #[arg(help = "Port number to run the server on")]
     #[arg(value_parser = validate_port)]
     port: u16,
-    
+
     #[arg(help = "Markdown file to serve")]
     file: Option<String>,
 }
@@ -42,11 +42,14 @@ async fn main() {
 
         let state = AppState::new();
         let doc_id = create_initial_document(&state, filepath.clone());
-        
+
         println!("Starting livemarkdown server on port {}", args.port);
         println!("Serving file: {}", filepath);
-        println!("Document URL: http://127.0.0.1:{}/document/{}", args.port, doc_id);
-        
+        println!(
+            "Document URL: http://127.0.0.1:{}/document/{}",
+            args.port, doc_id
+        );
+
         create_app_with_state(state)
     } else {
         println!("Starting livemarkdown server on port {}", args.port);
