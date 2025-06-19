@@ -17,6 +17,7 @@ use std::convert::Infallible;
 use ulid::Ulid;
 
 pub mod markdown;
+pub mod html_template;
 
 #[derive(Clone, Debug)]
 pub enum DocumentEvent {
@@ -364,7 +365,7 @@ async fn serve_document(
     };
 
     // Try to render the markdown
-    let html_content = match try_render_markdown(&markdown_content) {
+    let markdown_html = match try_render_markdown(&markdown_content) {
         Ok(html) => html,
         Err(_) => {
             return (
@@ -374,6 +375,14 @@ async fn serve_document(
                 .into_response();
         }
     };
+
+    // Wrap in HTML template with document title based on filepath
+    let title = std::path::Path::new(&filepath)
+        .file_stem()
+        .and_then(|stem| stem.to_str())
+        .unwrap_or("Markdown Document");
+    
+    let html_content = html_template::wrap_in_html_template(&markdown_html, Some(title));
 
     let mut headers = HeaderMap::new();
     headers.insert(header::CONTENT_TYPE, "text/html".parse().unwrap());
