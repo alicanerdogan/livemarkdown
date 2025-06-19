@@ -1,7 +1,7 @@
 use clap::Parser;
+use livemarkdown_rs::create_app;
 use std::process;
 use tokio::net::TcpListener;
-use livemarkdown_rs::create_app;
 
 #[derive(Parser)]
 #[command(name = "livemarkdown")]
@@ -48,4 +48,3 @@ async fn main() {
         }
     }
 }
-
