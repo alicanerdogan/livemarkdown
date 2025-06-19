@@ -276,3 +276,41 @@ async fn test_nonexistent_route() {
 
     response.assert_status(StatusCode::NOT_FOUND);
 }
+
+#[tokio::test]
+async fn test_list_documents() {
+    let app = create_app();
+    let server = TestServer::new(app).unwrap();
+
+    // Initially should return empty list
+    let response = server.get("/").await;
+    response.assert_status_ok();
+    response.assert_header("content-type", "text/html");
+    let body_text = response.text();
+    assert!(body_text.contains("<html>"));
+    assert!(body_text.contains("Documents"));
+    assert!(body_text.contains("<ul>"));
+
+    // Create some documents
+    let request1 = r#"{"filepath": "/path/to/first.md"}"#;
+    let create_response1 = server.post("/api/document").text(request1).await;
+    create_response1.assert_status(StatusCode::CREATED);
+    let create_body1: CreateDocumentResponse = 
+        facet_json::from_str(&create_response1.text()).unwrap();
+
+    let request2 = r#"{"filepath": "/path/to/second.md"}"#;
+    let create_response2 = server.post("/api/document").text(request2).await;
+    create_response2.assert_status(StatusCode::CREATED);
+    let create_body2: CreateDocumentResponse = 
+        facet_json::from_str(&create_response2.text()).unwrap();
+
+    // Now check the list contains the documents
+    let list_response = server.get("/").await;
+    list_response.assert_status_ok();
+    let list_body = list_response.text();
+    
+    assert!(list_body.contains(&format!("/document/{}", create_body1.id)));
+    assert!(list_body.contains("/path/to/first.md"));
+    assert!(list_body.contains(&format!("/document/{}", create_body2.id)));
+    assert!(list_body.contains("/path/to/second.md"));
+}

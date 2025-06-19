@@ -67,6 +67,16 @@ impl AppState {
             None
         }
     }
+
+    pub fn get_all_documents(&self) -> Vec<(String, String)> {
+        self.store
+            .lock()
+            .unwrap()
+            .filepath_map
+            .iter()
+            .map(|(id, filepath)| (id.clone(), filepath.clone()))
+            .collect()
+    }
 }
 
 impl Default for AppState {
@@ -97,12 +107,35 @@ pub fn create_app() -> Router {
 
 pub fn create_app_with_state(state: AppState) -> Router {
     Router::new()
+        .route("/", get(list_documents))
         .route("/api/document", post(create_document))
         .route("/api/document/{id}", delete(delete_document))
         .route("/api/document/{id}/open", post(open_document))
         .route("/api/document/{id}/position", post(update_position))
         .route("/document/{id}", get(serve_document))
         .with_state(state)
+}
+
+async fn list_documents(
+    axum::extract::State(state): axum::extract::State<AppState>,
+) -> impl IntoResponse {
+    let documents = state.get_all_documents();
+    
+    let mut html = String::from("<!DOCTYPE html>\n<html>\n<head>\n<title>Documents</title>\n</head>\n<body>\n<h1>Documents</h1>\n<ul>\n");
+    
+    for (id, filepath) in documents {
+        html.push_str(&format!(
+            "<li><a href=\"/document/{}\">{}</a></li>\n",
+            id, filepath
+        ));
+    }
+    
+    html.push_str("</ul>\n</body>\n</html>");
+    
+    let mut headers = HeaderMap::new();
+    headers.insert(header::CONTENT_TYPE, "text/html".parse().unwrap());
+    
+    (StatusCode::OK, headers, html)
 }
 
 async fn create_document(

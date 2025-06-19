@@ -49,6 +49,7 @@ A rust application that watches changes in a markdown file and renders into an h
     - `DELETE /api/document/:id` removes a file that is watched.
     - `POST /api/document/:id/open` opens the file in the browser.
     - `POST /api/document/:id/position` sends a desired document position that `{ sourcepos: string; }`
+    - `GET /` should return the list of documents as an HTML page with links to the documents.
 - The http server should serve the documents that are rendered with `GET /document/:id`
 - The http server should also have a SSE API (`GET /document/:id/updates`) which updates the browser clients for the latest active document position and and update event when the file contents are changed
 
@@ -68,8 +69,9 @@ A rust application that watches changes in a markdown file and renders into an h
 [x] Modularize server code into `src/lib.rs`
 [x] Integrate `comrak` to render markdown to HTML with source position
 [x] Add CLI arg to specify a document to render at start
-[ ] Implement file watching using `notify` and `notify-debouncer-mini`
 [ ] Implement SSE for real-time updates
 [ ] Add tests for SSE
+[ ] Implement file watching using `notify` and `notify-debouncer-mini`
+[ ] Prevent injection attacks for HTML rendering at root
 [ ] Add error handling and logging
 [ ] Use file streams for reading files
