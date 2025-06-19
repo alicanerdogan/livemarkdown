@@ -11,7 +11,7 @@ This is a Rust project called `livemarkdown-rs` - appears to be a markdown-relat
 
 ### Building and Running
 - `cargo build` - Compile the project
-- `cargo run` - Build and run the application
+- `cargo run -- --port=3030` - Build and run the application
 - `cargo check` - Check code without building (faster feedback)
 
 ### Testing and Quality
@@ -32,8 +32,7 @@ Currently a single-file Rust application with:
 ## Notes
 
 - Project uses Rust 2024 edition
-- No external dependencies currently defined
-- No test structure in place yet
+- It uses `facet` for JSON serialization. And it is forbidden to use `serde` in this project. `lib.rs` has example of how to use `facet` for JSON serialization.
 
 # Product requirements
 A rust application that watches changes in a markdown file and renders into an html by serving it over local http server.
@@ -43,7 +42,8 @@ A rust application that watches changes in a markdown file and renders into an h
 - The application should be an executable binary.
 - The application should accept a `--port` option to run the server.
     - If the port is used, it should return the exit code 30.
-- The application should
+- The application should accept an optional filepath as a parameter to run the server with a markdown file.
+    - e.g. `--port 8080 ./path/to/file.md`
 - The http server should expose the following HTTP calls:
     - `POST /api/document` which creates a markdown that is watched with `{ filepath: string; }`. And returns a document id with `{ id: string }`
     - `DELETE /api/document/:id` removes a file that is watched.
@@ -67,7 +67,7 @@ A rust application that watches changes in a markdown file and renders into an h
 [x] Add integration tests using `axum_test`
 [x] Modularize server code into `src/lib.rs`
 [x] Integrate `comrak` to render markdown to HTML with source position
-[ ] Add CLI arg to specify a document to render at start
+[x] Add CLI arg to specify a document to render at start
 [ ] Implement file watching using `notify` and `notify-debouncer-mini`
 [ ] Implement SSE for real-time updates
 [ ] Add tests for SSE

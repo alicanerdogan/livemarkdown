@@ -92,7 +92,10 @@ pub struct UpdatePositionRequest {
 }
 
 pub fn create_app() -> Router {
-    let state = AppState::new();
+    create_app_with_state(AppState::new())
+}
+
+pub fn create_app_with_state(state: AppState) -> Router {
     Router::new()
         .route("/api/document", post(create_document))
         .route("/api/document/{id}", delete(delete_document))
