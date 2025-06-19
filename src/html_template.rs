@@ -1,4 +1,3 @@
-
 const STYLES: &str = include_str!("../assets/index.css");
 const SCRIPTS: &str = include_str!("../assets/index.js");
 

@@ -69,9 +69,12 @@ A rust application that watches changes in a markdown file and renders into an h
 [x] Modularize server code into `src/lib.rs`
 [x] Integrate `comrak` to render markdown to HTML with source position
 [x] Add CLI arg to specify a document to render at start
-[ ] Implement SSE for real-time updates
-[ ] Add tests for SSE
-[ ] Implement file watching using `notify` and `notify-debouncer-mini`
+[x] Implement SSE for real-time updates
+[x] Add tests for SSE
+[x] Implement file watching using `notify` and `notify-debouncer-mini`
+[x] CSS markup for markdown (light and dark mode)
+[ ] Debug file watching
+[ ] Replacing the content of the file with the new content in the client
 [ ] Prevent injection attacks for HTML rendering at root
 [ ] Add error handling and logging
 [ ] Use file streams for reading files
