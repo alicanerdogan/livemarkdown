@@ -259,7 +259,22 @@ async fn list_documents(
 ) -> impl IntoResponse {
     let documents = state.get_all_documents();
 
-    let mut html = String::from("<!DOCTYPE html>\n<html>\n<head>\n<title>Documents</title>\n</head>\n<body>\n<h1>Documents</h1>\n<ul>\n");
+    let mut html = format!(
+        r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documents</title>
+    <style>{}</style>
+</head>
+<body>
+<main>
+<h1>Documents</h1>
+</main>
+</html>"#,
+        html_template::get_styles()
+    );
 
     for (id, filepath) in documents {
         html.push_str(&format!(

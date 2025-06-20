@@ -26,6 +26,10 @@ pub fn wrap_in_html_template(content: &str, title: Option<&str>) -> String {
     )
 }
 
+pub fn get_styles() -> String {
+    STYLES.to_string()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
