@@ -21,6 +21,7 @@ use ulid::Ulid;
 
 pub mod html_template;
 pub mod markdown;
+pub mod utils;
 
 #[derive(Clone, Debug)]
 pub enum DocumentEvent {
@@ -142,16 +143,19 @@ impl AppState {
     }
 
     pub fn add_document(&self, id: String, filepath: String) {
+        // Convert to absolute path
+        let absolute_path = utils::to_absolute_path(&filepath);
+
         {
             let mut store = self.store.lock().unwrap();
-            store.filepath_map.insert(id.clone(), filepath.clone());
-            store.document_id_map.insert(filepath.clone(), id.clone());
+            store.filepath_map.insert(id.clone(), absolute_path.clone());
+            store.document_id_map.insert(absolute_path.clone(), id.clone());
             store.position_map.insert(id.clone(), "1:1-1:1".to_string()); // Default position
         }
 
         // Start watching the file
-        if let Err(e) = self.watch_file(&filepath) {
-            eprintln!("Failed to watch file {}: {}", filepath, e);
+        if let Err(e) = self.watch_file(&absolute_path) {
+            eprintln!("Failed to watch file {}: {}", absolute_path, e);
         }
     }
 

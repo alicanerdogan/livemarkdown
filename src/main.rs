@@ -1,5 +1,5 @@
 use clap::Parser;
-use livemarkdown_rs::{create_app, create_app_with_state, AppState};
+use livemarkdown_rs::{create_app, create_app_with_state, utils, AppState};
 use std::process;
 use tokio::net::TcpListener;
 
@@ -34,8 +34,11 @@ async fn main() {
     let args = Args::parse();
 
     let app = if let Some(filepath) = &args.file {
+        // Convert to absolute path for consistency
+        let absolute_filepath = utils::to_absolute_path(filepath);
+        
         // Check if file exists
-        if !std::path::Path::new(filepath).exists() {
+        if !std::path::Path::new(&absolute_filepath).exists() {
             eprintln!("File not found: {}", filepath);
             process::exit(1);
         }
