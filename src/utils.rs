@@ -1,7 +1,7 @@
 use std::path::Path;
 
 /// Converts a path to an absolute path.
-/// 
+///
 /// First tries to canonicalize the path (which resolves symlinks and makes it absolute).
 /// If that fails, it attempts to make the path absolute by joining with current directory.
 /// Falls back to the original path if all attempts fail.

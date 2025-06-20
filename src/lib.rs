@@ -23,6 +23,11 @@ pub mod html_template;
 pub mod markdown;
 pub mod utils;
 
+#[derive(facet::Facet)]
+struct FileChangedResponse {
+    html: String,
+}
+
 #[derive(Clone, Debug)]
 pub enum DocumentEvent {
     FileChanged {
@@ -149,7 +154,9 @@ impl AppState {
         {
             let mut store = self.store.lock().unwrap();
             store.filepath_map.insert(id.clone(), absolute_path.clone());
-            store.document_id_map.insert(absolute_path.clone(), id.clone());
+            store
+                .document_id_map
+                .insert(absolute_path.clone(), id.clone());
             store.position_map.insert(id.clone(), "1:1-1:1".to_string()); // Default position
         }
 
@@ -431,9 +438,27 @@ async fn document_updates(
         while let Ok(event) = rx.recv().await {
             match event {
                 DocumentEvent::FileChanged { document_id } if document_id == id => {
+                    let html_content = match state.get_filepath_by_id(&document_id) {
+                        Some(filepath) => {
+                            match std::fs::read_to_string(&filepath) {
+                                Ok(content) => {
+                                    match try_render_markdown(&content) {
+                                        Ok(html) => html,
+                                        Err(_) => String::from("<p>Error rendering markdown</p>"),
+                                    }
+                                },
+                                Err(_) => String::from("<p>Error reading file</p>"),
+                            }
+                        },
+                        None => String::from("<p>Document not found</p>"),
+                    };
+
+                    let response = FileChangedResponse { html: html_content };
+                    let json_data = facet_json::to_string(&response);
+
                     yield Ok(Event::default()
                         .event("file_changed")
-                        .data("{}"));
+                        .data(json_data));
                 },
                 DocumentEvent::PositionUpdate { document_id, sourcepos } if document_id == id => {
                     yield Ok(Event::default()

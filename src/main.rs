@@ -36,7 +36,7 @@ async fn main() {
     let app = if let Some(filepath) = &args.file {
         // Convert to absolute path for consistency
         let absolute_filepath = utils::to_absolute_path(filepath);
-        
+
         // Check if file exists
         if !std::path::Path::new(&absolute_filepath).exists() {
             eprintln!("File not found: {}", filepath);
