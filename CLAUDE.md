@@ -73,8 +73,10 @@ A rust application that watches changes in a markdown file and renders into an h
 [x] Add tests for SSE
 [x] Implement file watching using `notify` and `notify-debouncer-mini`
 [x] CSS markup for markdown (light and dark mode)
-[ ] Debug file watching
-[ ] Replacing the content of the file with the new content in the client
-[ ] Prevent injection attacks for HTML rendering at root
-[ ] Add error handling and logging
+[x] Debug file watching
+[x] Replacing the content of the file with the new content in the client
+[x] Add error handling and logging
+[ ] Style the index file
+[ ] Make hashing consistent for filepaths
 [ ] Use file streams for reading files
+[ ] Prevent injection attacks for HTML rendering at root
