@@ -2,6 +2,13 @@
 name = "livemarkdown"
 version = "0.1.0"
 edition = "2024"
+authors = ["Alican Erdogan <opensource@alican.codes>"]
+license = "MIT"
+description = "A live markdown renderer that watches files and serves HTML over HTTP"
+readme = "README.md"
+repository = "https://github.com/yourusername/livemarkdown"
+keywords = ["markdown", "cli", "server", "live-reload"]
+categories = ["command-line-utilities", "web-programming"]
 
 [dependencies]
 axum = "0.8.4"
@@ -19,3 +26,9 @@ async-stream = "0.3"
 [dev-dependencies]
 axum-test = "18.0.0-rc3"
 
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+panic = "abort"
+opt-level = "z"

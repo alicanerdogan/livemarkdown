@@ -77,7 +77,7 @@ A rust application that watches changes in a markdown file and renders into an h
 [x] Replacing the content of the file with the new content in the client
 [x] Add error handling and logging
 [x] Style the index file
-[ ] Make hashing consistent for filepaths
+[x] Make hashing consistent for filepaths
 [ ] Use file streams for reading files
 [ ] Image support
 [ ] Prevent injection attacks for HTML rendering at root
