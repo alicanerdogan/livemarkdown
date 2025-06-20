@@ -17,7 +17,6 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::sync::broadcast;
 use tokio_stream::Stream;
-use ulid::Ulid;
 
 pub mod html_template;
 pub mod markdown;
@@ -271,8 +270,7 @@ async fn list_documents(
 <body>
 <main>
 <h1>Documents</h1>
-</main>
-</html>"#,
+<ul>"#,
         html_template::get_styles()
     );
 
@@ -283,7 +281,7 @@ async fn list_documents(
         ));
     }
 
-    html.push_str("</ul>\n</body>\n</html>");
+    html.push_str("</ul>\n</main>\n</body>\n</html>");
 
     let mut headers = HeaderMap::new();
     headers.insert(header::CONTENT_TYPE, "text/html".parse().unwrap());
@@ -315,15 +313,8 @@ async fn create_document(
         return (StatusCode::CREATED, headers, json_body);
     }
 
-    // Generate new ID: filename + ULID
-    let filename = std::path::Path::new(&filepath)
-        .file_name()
-        .and_then(|name| name.to_str())
-        .unwrap_or("unknown")
-        .replace('.', "-");
-
-    let ulid = Ulid::new();
-    let doc_id = format!("{}-{}", filename, ulid);
+    // Generate new ID: consistent hash-based
+    let doc_id = utils::generate_document_id(&filepath);
 
     // Store the document
     state.add_document(doc_id.clone(), filepath);

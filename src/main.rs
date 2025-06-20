@@ -1,5 +1,5 @@
 use clap::Parser;
-use livemarkdown_rs::{create_app, create_app_with_state, utils, AppState};
+use livemarkdown::{create_app, create_app_with_state, utils, AppState};
 use std::process;
 use tokio::net::TcpListener;
 
@@ -76,15 +76,8 @@ async fn main() {
 }
 
 fn create_initial_document(state: &AppState, filepath: String) -> String {
-    // Generate new ID: filename + ULID
-    let filename = std::path::Path::new(&filepath)
-        .file_name()
-        .and_then(|name| name.to_str())
-        .unwrap_or("unknown")
-        .replace('.', "-");
-
-    let ulid = ulid::Ulid::new();
-    let doc_id = format!("{}-{}", filename, ulid);
+    // Generate new ID: consistent hash-based
+    let doc_id = utils::generate_document_id(&filepath);
 
     // Store the document
     state.add_document(doc_id.clone(), filepath);

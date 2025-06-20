@@ -42,7 +42,8 @@ mod tests {
         assert!(html.contains("<!DOCTYPE html>"));
         assert!(html.contains("<title>Markdown Document</title>"));
         assert!(html.contains("<h1>Test Content</h1>"));
-        assert!(html.contains("<style>\n    </style>"));
+        assert!(html.contains("<style>"));
+        assert!(html.contains("</style>"));
     }
 
     #[test]

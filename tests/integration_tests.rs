@@ -1,6 +1,6 @@
 use axum::http::StatusCode;
 use axum_test::TestServer;
-use livemarkdown_rs::{create_app, CreateDocumentRequest, CreateDocumentResponse};
+use livemarkdown::{create_app, CreateDocumentRequest, CreateDocumentResponse};
 
 #[tokio::test]
 async fn test_create_document() {
@@ -240,16 +240,16 @@ async fn test_create_document_id_format_consistency() {
     response.assert_status(StatusCode::CREATED);
     let body_text = response.text();
 
-    // Verify ID format: filename-extension-ULID
+    // Verify ID format: filename-extension-hash
     assert!(body_text.starts_with("{\"id\":\"consistency-md-"));
     assert!(body_text.ends_with("\"}"));
 
-    // Extract the ID to verify ULID format (26 characters)
+    // Extract the ID to verify hash format (8 characters)
     let id_start = body_text.find("consistency-md-").unwrap() + "consistency-md-".len();
     let id_end = body_text.find("\"}").unwrap();
-    let ulid_part = &body_text[id_start..id_end];
-    assert_eq!(ulid_part.len(), 26); // ULID is 26 characters
-    assert!(ulid_part.chars().all(|c| c.is_ascii_alphanumeric()));
+    let hash_part = &body_text[id_start..id_end];
+    assert_eq!(hash_part.len(), 8); // Hash is 8 characters
+    assert!(hash_part.chars().all(|c| c.is_ascii_alphanumeric()));
 }
 
 #[tokio::test]
@@ -287,7 +287,7 @@ async fn test_list_documents() {
     response.assert_status_ok();
     response.assert_header("content-type", "text/html");
     let body_text = response.text();
-    assert!(body_text.contains("<html>"));
+    assert!(body_text.contains("<html"));
     assert!(body_text.contains("Documents"));
     assert!(body_text.contains("<ul>"));
 
@@ -364,7 +364,7 @@ async fn test_file_watcher_integration() {
 
     // Create a temporary file using TMPDIR
     let tmp_dir = env::var("TMPDIR").unwrap_or_else(|_| "/tmp".to_string());
-    let file_path = format!("{}/test_file_watcher_{}.md", tmp_dir, ulid::Ulid::new());
+    let file_path = format!("{}/test_file_watcher_{}.md", tmp_dir, std::process::id());
     fs::write(&file_path, "# Initial content").unwrap();
 
     let app = create_app();
@@ -407,7 +407,7 @@ async fn test_file_change_notification_via_sse() {
 
     // Create a temporary file using TMPDIR
     let tmp_dir = env::var("TMPDIR").unwrap_or_else(|_| "/tmp".to_string());
-    let file_path = format!("{}/test_file_change_{}.md", tmp_dir, ulid::Ulid::new());
+    let file_path = format!("{}/test_file_change_{}.md", tmp_dir, std::process::id());
     fs::write(&file_path, "# Initial content").unwrap();
 
     let app = create_app();
